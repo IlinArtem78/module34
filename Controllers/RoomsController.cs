@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using AutoMapper;
+using Azure.Core;
 using HomeApi.Configuration;
 using HomeApi.Contracts.Models.Devices;
 using HomeApi.Contracts.Models.Rooms;
@@ -25,18 +26,30 @@ namespace HomeApi.Controllers
             _mapper = mapper;
         }
 
-        //TODO: Задание - добавить метод на получение всех существующих комнат
-        [HttpPut]
-        [Route("")]
-        public async Task<IActionResult> GetRooms([FromBody] GetRoomsResponse responce)
-        {
 
-            return StatusCode(201, $"Комната {responce.RoomAmount} найдена!");
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name">Имя комнаты</param>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        
+        [HttpPut]
+        [Route("{name}")]
+        public async Task<IActionResult> EditRoom([FromRoute] string name, [FromBody] EditRoomRequest request)
+        {
+            var room = await _repository.GetRoomByName(name);
+            if (room == null)
+                return StatusCode(400, $"Ошибка: Комната {room.Name} не найдена!");
+            await _repository.UpdateRoom(room, new Data.Queries.UpdateRoomQuery(request.NewName, request.NewArea, request.NewGasConnected, request.NewVoltage));
+            return StatusCode(201, $"Комната {room.Name} обновлена!");
         }
             /// <summary>
             /// Добавление комнаты
             /// </summary>
-            [HttpPost] 
+        [HttpPost] 
         [Route("")] 
         public async Task<IActionResult> Add([FromBody] AddRoomRequest request)
         {
